@@ -50,7 +50,7 @@ class Tree:
 
     def __init__(self):
         self.__nodes = []
-        self.__path = b''
+        self.__path = []
         self.paths = []
 
     def addNode(self, node):
@@ -67,9 +67,9 @@ class Tree:
             return self.__path
 
         if d:
-            self.__path += b'1'
+            self.__path.append(1)
         else:
-            self.__path += b'0'
+            self.__path.append(0)
 
         if(root.key == k):
             self.__path = self.__path[1:]
@@ -141,14 +141,6 @@ def convert_dict_to_leaf_nodes(d):
 
     return leaf_nodes
 
-def write_to_file(f, bits, tree):
-    file_name = f + '.huf' 
-    tree_string = convert_tree_to_string(tree)
-    with open(file_name, 'w') as f:
-        f.write(bits)
-        f.write('tree:')
-        f.write(tree_string)
-
 def encode(s):
     tree = Tree()
 
@@ -168,35 +160,127 @@ def encode(s):
             tree.addNode(new_node)
             tree.sort()
     
-    bits = b''
+    bits = []
     for c in s:
         tree.search_path(tree.nodes[0], c)
 
     for b in tree.paths:
-        bits += b
+        bits.append(b)
 
-    #print(bits)
-    #print(len(bits))
+    v = []
+    for n in leaf_nodes:
+        v.append(n.key)
 
-    return (bits, tree)
+    test = zip(v, tree.paths)
+
+    ss = []
+    for c, v in test:
+        ss.append(c)
+        ss.append(v)
+
+    #print(ss)
+    return (bits, ss)
 
 
-def decode(h, tree):
-    print(h)
-    for n in tree.nodes:
-        print(n)
+def iter_bytes(my_bytes):
+    for i in range(len(my_bytes)):
+        yield my_bytes[i:i+1]
+
+
+
+def decode(h, ss):
+    print(h, ss)
+
+def getbytes(bits):
+    done = False
+    while not done:
+        byte = 0
+        for _ in range(0, 8):
+            try:
+                bit = next(bits)
+            except StopIteration:
+                bit = 0
+                done = True
+            byte = (byte << 1) | bit
+        yield byte
+
 
 
 if __name__ == '__main__':
-    s = "Huffman"
-    f = "text.txt"
+    s = ''
+    #f = "text.txt"
+    f = 'test.txt'
 
     if len(sys.argv) > 1:
         f = sys.argv[1]
 
     s = get_s(f)
 
-    s = "Huffman"
+    #s = "Huffman"
 
-    decode(    *encode(s)    )
+    bits, ss = encode(s)
+
+    import itertools
+    bits = list(itertools.chain.from_iterable(bits))
+    ss =list(itertools.chain.from_iterable(ss))
+
+    stri = ''
+    for n in ss:
+        if isinstance(n, int):
+            stri += str(n)
+            continue
+        stri += n
+
+
+    bits = getbytes(iter(bits))
+    i = 0
+    for b in getbytes(iter(bits)):
+        i += b
+        
+    with open('test.txt.huf', 'w') as file:
+        file.write(str(i))
+
+        #file.write('|')
+        #file.write(stri)
+
+    dec = open('test.txt.huf', 'r').read()
+
+    print(dec)
+
+#    string = ''
+#    with open('test.txt.huf', 'r') as fi:
+#        string = fi.read()
+#
+#    h, ss = string.split('|')   
+#
+#    decode(h, ss)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
