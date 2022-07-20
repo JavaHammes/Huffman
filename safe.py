@@ -258,6 +258,7 @@ def get_tree_bin(ss):
                 ss[i] = ss[i] + '0' * (mlb - l)
             bits += ss[i]
 
+    print("maxlength: ", mlb)
     letters_bin = string2bits(letters)
 
     letters_bin_string = ""
@@ -342,6 +343,7 @@ def get_ss(dec):
                 rt = x
                 break
 
+    print("calculated length: " , rt)
     bit_list = split_string_to_list(bits, rt)
 
     new_bits_list = []
@@ -356,10 +358,12 @@ def get_ss(dec):
                 new_bits_list.append(nn_b[:-1])
                 break
 
+    print("bits: ", new_bits_list)
 
     new_letters_list = []
     for c in l:
         new_letters_list.append(c)
+    print("letters: ", new_letters_list)
 
     test = zip(new_letters_list, new_bits_list)
 
@@ -368,6 +372,7 @@ def get_ss(dec):
         ss.append(c)
         ss.append(v)
 
+    print("NEW SS: ", ss)
     return ss
 
 if __name__ == '__main__':
@@ -379,7 +384,7 @@ if __name__ == '__main__':
 
     s = get_s(f)
 
-    s = "Huffman is a nice guy"
+    #s = "Here comes another test"
     bits, ss = encode(s)
 
     tree_bin = get_tree_bin(ss)
