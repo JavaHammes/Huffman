@@ -176,6 +176,10 @@ def encode(s):
     for n in leaf_nodes:
         tree.addNode(n)
 
+    v = []
+    for n in leaf_nodes:
+        v.append(n.key)
+
     while(tree.nodes[0].value != len(s)):
         tree.sort()
         if tree.nodes[1] != None:
@@ -185,16 +189,17 @@ def encode(s):
             tree.addNode(new_node)
             tree.sort()
     
-    bits = ""
+    right_bits = ""
     for c in s:
         tree.search_path(tree.nodes[0], c)
 
     for b in tree.paths:
-        bits += b
+        right_bits += b
 
-    v = []
-    for n in leaf_nodes:
-        v.append(n.key)
+    tree.paths = []
+
+    for c in v:
+        tree.search_path(tree.nodes[0], c)
 
     test = zip(v, tree.paths)
 
@@ -203,14 +208,26 @@ def encode(s):
         ss.append(c)
         ss.append(v)
 
-    return (bits, ss)
+    return (right_bits, ss)
+
+def bitgen(x):
+    for c in x:
+        yield c
 
 def decode(h, ss):
-    o = ""
-    for s in ss:
-        o += s
+    bg = bitgen(h)
+    current_bits = ""
+    solution = ""
+    for x in bg:
+        current_bits += x
+        i = 0
+        for w in ss:
+            if w == current_bits:
+                solution += ss[i-1]
+                current_bits = ""
+            i += 1
 
-    print(h, o)
+    return solution
 
 if __name__ == '__main__':
     s = ''
@@ -221,10 +238,15 @@ if __name__ == '__main__':
 
     s = get_s(f)
 
+    #s = "Alexander ist eine coole Socke und er ist einfach ein guter Programmierer!"
+
     bits, ss = encode(s)
 
     print_to_file(bits, 'test.txt.huf')
-    
+
     dec = read_from_file('test.txt.huf')
 
-    decode(dec, ss) 
+    solution = decode(dec, ss) 
+
+    with open('solution.txt', 'w') as file:
+        file.write(solution)
