@@ -1,5 +1,6 @@
 # | encode.py
 import sys
+import struct
 
 class Node:
 
@@ -50,7 +51,7 @@ class Tree:
 
     def __init__(self):
         self.__nodes = []
-        self.__path = []
+        self.__path = ""
         self.paths = []
 
     def addNode(self, node):
@@ -67,9 +68,9 @@ class Tree:
             return self.__path
 
         if d:
-            self.__path.append(1)
+            self.__path += "1"
         else:
-            self.__path.append(0)
+            self.__path += "0"
 
         if(root.key == k):
             self.__path = self.__path[1:]
@@ -141,6 +142,30 @@ def convert_dict_to_leaf_nodes(d):
 
     return leaf_nodes
 
+def print_to_file(bits, fn):
+    n = 31
+    bbs = [bits[i:i+n] for i in range(0, len(bits), n)]
+
+    with open(fn, "wb") as f:
+        for b in bbs:
+            f.write(struct.pack('i', int(b,2)))
+
+def read_from_file(fn):
+    bbs = open(fn, "rb").read()
+
+    n, _  = divmod(len(bbs), struct.calcsize('i'))
+    t = struct.unpack('i' * n, bbs)
+
+    b_b = ""
+    for x in t:
+        c = str(bin(x)[2:])
+        if len(c) != 31 and x != t[-1]:
+            c = (31 - len(c)) * "0" + c
+        b_b += c
+
+    return b_b
+
+
 def encode(s):
     tree = Tree()
 
@@ -160,12 +185,12 @@ def encode(s):
             tree.addNode(new_node)
             tree.sort()
     
-    bits = []
+    bits = ""
     for c in s:
         tree.search_path(tree.nodes[0], c)
 
     for b in tree.paths:
-        bits.append(b)
+        bits += b
 
     v = []
     for n in leaf_nodes:
@@ -178,37 +203,17 @@ def encode(s):
         ss.append(c)
         ss.append(v)
 
-    #print(ss)
     return (bits, ss)
 
-
-def iter_bytes(my_bytes):
-    for i in range(len(my_bytes)):
-        yield my_bytes[i:i+1]
-
-
-
 def decode(h, ss):
-    print(h, ss)
+    o = ""
+    for s in ss:
+        o += s
 
-def getbytes(bits):
-    done = False
-    while not done:
-        byte = 0
-        for _ in range(0, 8):
-            try:
-                bit = next(bits)
-            except StopIteration:
-                bit = 0
-                done = True
-            byte = (byte << 1) | bit
-        yield byte
-
-
+    print(h, o)
 
 if __name__ == '__main__':
     s = ''
-    #f = "text.txt"
     f = 'test.txt'
 
     if len(sys.argv) > 1:
@@ -216,71 +221,10 @@ if __name__ == '__main__':
 
     s = get_s(f)
 
-    #s = "Huffman"
-
     bits, ss = encode(s)
 
-    import itertools
-    bits = list(itertools.chain.from_iterable(bits))
-    ss =list(itertools.chain.from_iterable(ss))
+    print_to_file(bits, 'test.txt.huf')
+    
+    dec = read_from_file('test.txt.huf')
 
-    stri = ''
-    for n in ss:
-        if isinstance(n, int):
-            stri += str(n)
-            continue
-        stri += n
-
-
-    bits = getbytes(iter(bits))
-    i = 0
-    for b in getbytes(iter(bits)):
-        i += b
-        
-    with open('test.txt.huf', 'w') as file:
-        file.write(str(i))
-
-        #file.write('|')
-        #file.write(stri)
-
-    dec = open('test.txt.huf', 'r').read()
-
-    print(dec)
-
-#    string = ''
-#    with open('test.txt.huf', 'r') as fi:
-#        string = fi.read()
-#
-#    h, ss = string.split('|')   
-#
-#    decode(h, ss)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    decode(dec, ss) 

@@ -1,20 +1,28 @@
+import struct
 
-import sys
+bits = "10000000011000000001100000000101000000001100000000110000000010"
 
-enw = open('test.txt', 'rb').read()
+n = 31
+bytes = [bits[i:i+n] for i in range(0, len(bits), n)]
 
-def bitgen(x):
-    for c in x:
-        for i in range(8):
-            yield int((c & (0x80>>i)) != 0)
+with open("test.bnr", "wb") as f:
+    for b in bytes:
+        print(b)
+        f.write(struct.pack('i', int(b, 2)))
 
-bits = [1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1]
+print('#' * 80)
 
 
-bg = bitgen(enw)
+byte = open("test.bnr", "rb").read()
 
-print(bg)
+n, r = divmod(len(byte), struct.calcsize('i'))
+t = struct.unpack('i' * n, byte)
 
-for b in bg:
-    print(type(b))
-    print(sys.getsizeof(b))
+bbs = []
+for x in t:
+    x = bin(x)[2:]
+    bbs.append(x)
+
+for b in bbs:
+    print(b)
+
