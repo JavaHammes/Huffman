@@ -235,60 +235,51 @@ def string2bits(s=''):
 def bits2string(b=None):
     return ''.join([chr(int(x, 2)) for x in b])
 
-def get_tree_bin(ss):
+def get_tree_bin_two(code):
     letters = ""
-    bits = ""
+    bits = []
 
-
-
-    mlb = 0
-    for i in range(len(ss)):
-        if i % 2 == 1:
-            ss[i] += "1"
-            l = len(ss[i])
-            if l > mlb:
-                mlb = l
-
-    for i in range(len(ss)):
+    for i in range(len(code)):
         if i % 2 == 0:
-            letters += ss[i]
+            letters += code[i]
         else:
-            l = len(ss[i])
-            if l < mlb:
-                ss[i] = ss[i] + '0' * (mlb - l)
-            bits += ss[i]
+            bits.append(code[i])
 
     letters_bin = string2bits(letters)
 
-    letters_bin_string = ""
-    for l in letters_bin:
-        letters_bin_string += l
+
+    mlb = 0
+    new_bits = []
+    for b in bits:
+        b = b + "1"
+        if len(b) > mlb:
+            mlb = len(b)
+
+        new_bits.append(b)
 
 
+    nn_bits = []
+    for b in new_bits:
+        if len(b) < mlb:
+            b = b + "0" * (mlb - len(b))
+        nn_bits.append(b)
 
+    LETTERS_AMOUNT = len(letters_bin)
 
+    BITS_LENGTH = mlb
 
+    bit_message_header_list = [format(LETTERS_AMOUNT, '08b'),format(BITS_LENGTH, '08b')]
 
-    llb = len(letters_bin_string)
-    lb = len(bits)
+    bit_message_body_list = letters_bin + nn_bits
 
-    if llb > lb:
-        bits += "1" + "0" * (llb - lb - 1)
-    else:
-        letters_bin_string += "1" + "0" * (lb - llb - 1)
+    bit_message = bit_message_header_list + bit_message_body_list
 
+    bit_message_string = ""
+    for b in bit_message:
+        bit_message_string += b
 
+    return bit_message_string
 
-    length = len(letters_bin_string) + len(bits)
-
-    length_bin = bin(length)[2:]
-
-    assert len(length_bin) < 31
-
-    length_bin = (31 - len(length_bin)) * "0" + length_bin
-    result_bit_string = length_bin + letters_bin_string + bits 
-
-    return result_bit_string
 
 def split_string_to_list(string, n=8):
     return[string[i:i+n] for i in range(0, len(string), n)]
@@ -370,30 +361,70 @@ def get_ss(dec):
 
     return ss
 
+def get_ss_two(bit_message_string):
+    bm = bit_message_string
+
+    BITS_AMOUNT = LETTERS_AMOUNT = int(bm[:8], 2)
+
+    LETTERS_LENGTH = 8
+
+    BITS_LENGTH = int(bm[8:16], 2)
+
+    letter_bits_amount = LETTERS_LENGTH * LETTERS_AMOUNT
+
+    path_bits_amount = BITS_LENGTH * BITS_AMOUNT
+
+    letter_bits = bm[16:16 + letter_bits_amount]
+
+    path_bits = bm[16+letter_bits_amount:16 + letter_bits_amount + path_bits_amount+1]
+
+    letter_bits_list = split_string_to_list(letter_bits, 8)
+    path_bits_list = split_string_to_list(path_bits, BITS_LENGTH)
+
+    letters = bits2string(letter_bits_list)
+
+    nl = []
+    for b in path_bits_list:
+        for i in reversed(range(len(b))):
+            if b[i] == "0":
+                b = b[:-1]
+            elif b[i] == "1":
+                b = b[:-1]
+                nl.append(b)
+                break
+
+
+    path_bits_list = nl
+
+    letters_list = []
+    for i in range(len(letters)):
+        letters_list.append(letters[i])
+
+    test = zip(letters_list, path_bits_list)
+
+    ss = []
+    for c, v in test:
+        ss.append(c)
+        ss.append(v)
+
+    return (ss, bm[16 + letter_bits_amount + path_bits_amount:])
+
 if __name__ == '__main__':
-    s = ''
-    f = 'text.txt'
+    s = "Hallo, das ist ein längerer Text um zu schauen, ob alles funktioniert. Ich würde mich auf jeden Fall sehr freuen, wenn es endlich klappen würde, da das schon ganzschön lange gedauert hat so!"
+    print("s: ", s)
 
-    if len(sys.argv) > 1:
-        f = sys.argv[1]
-
-    s = get_s(f)
-
-    s = "Huffman is a nice guy"
     bits, ss = encode(s)
 
-    tree_bin = get_tree_bin(ss)
+    tree_bin = get_tree_bin_two(ss)
 
     print_to_file(tree_bin + bits, 'test.txt.huf')
 
-    dec = read_from_file('test.txt.huf')
-
-    x = get_ss(dec)
-    length = int(dec[0:31], 2)
-    dec = dec[31+length:]
+    bit_message_string = read_from_file('test.txt.huf')
+    x, dec= get_ss_two(bit_message_string)
 
     solution = decode(dec, x) 
-    print(solution)
+    print("S: ", solution)
 
     with open('solution.txt', 'w') as file:
         file.write(solution)
+
