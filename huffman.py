@@ -1,5 +1,6 @@
 # | encode.py
 import sys
+import os
 import struct
 
 class Node:
@@ -352,12 +353,17 @@ if __name__ == '__main__':
         sys.exit(0)
 
     file_name = sys.argv[2]
+
+    if os.path.isfile(file_name) == False:
+        print("Couldn't Find File: ", file_name)
+        sys.exit(0)
     
     if encoded:
         s = get_s(file_name)
         bits, ss = encode(s)
         tree_bin = get_tree_bin_two(ss)
         print_to_file(tree_bin + bits, file_name + '.huf')
+        os.remove(file_name)
 
     elif decoded:
         if file_name.endswith(".huf") == False:
@@ -370,3 +376,4 @@ if __name__ == '__main__':
         with open(file_name[:-4], 'w') as file:
             file.write(solution)
 
+        os.remove(file_name)
