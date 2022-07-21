@@ -336,8 +336,8 @@ def get_ss_two(bit_message_string):
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print("Usage: ./huffman.py -e test.txt")
-        print("       ./huffman.py -d test.txt.huf")
+        print("Usage: python3 huffman.py -e test.txt")
+        print("       python3 huffman.py -d test.txt.huf")
         sys.exit(0)
 
     encoded = False
@@ -348,8 +348,8 @@ if __name__ == '__main__':
     elif sys.argv[1] == "-d":
         decoded = True
     else:
-        print("Usage: ./huffman.py -e test.txt")
-        print("       ./huffman.py -d test.txt.huf")
+        print("Usage: python3 huffman.py -e test.txt")
+        print("       python3 huffman.py -d test.txt.huf")
         sys.exit(0)
 
     file_name = sys.argv[2]
