@@ -114,7 +114,9 @@ def get_s(f):
     with open(f, 'r') as fi:
         s = fi.read()
 
-    #assert len(s) > 10
+    if len(s) < 100:
+        print("File Is Too Small")
+        raise Exeption
     
     return s
 
@@ -280,86 +282,8 @@ def get_tree_bin_two(code):
 
     return bit_message_string
 
-
 def split_string_to_list(string, n=8):
     return[string[i:i+n] for i in range(0, len(string), n)]
-
-
-def find_teiler(number):
-    t = []
-    for i in range(3, number):
-        if number % i == 0:
-            t.append(i)
-
-    return t
-
-def get_ss(dec):
-    length = int(dec[0:31], 2)
-
-    ss = ""
-    for i in range(31, 32+length):
-        ss += dec[i]
-
-
-    letters = ss[0:length//2]
-    bits = ss[length//2:]
-
-    n = 8
-    letters_ar = [letters[i:i+n] for i in range(0, len(letters), n)]
-
-    l = bits2string(letters_ar)
-
-    i = len(bits)
-    new_bits = ""
-    nn_bits = bits
-    for i in reversed(range(len(bits))):
-        if bits[i] == "0":
-            new_bits = nn_bits[:-1]
-            nn_bits = new_bits
-        if bits[i] == "1":
-            break
-            
-
-    bits = nn_bits[:-1]
-
-    t = find_teiler(len(bits))
-
-    rt = 0
-    for x in t:
-        bit_list = split_string_to_list(bits, x)
-
-        for b in bit_list:
-            if b == "1" * x:
-                rt = x
-                break
-
-    bit_list = split_string_to_list(bits, rt)
-
-    new_bits_list = []
-    for b in bit_list:
-        new_b = ""
-        nn_b = b
-        for i in reversed(range(len(b))):
-            if b[i] == "0":
-                new_b = nn_b[:-1]
-                nn_b = new_b
-            if b[i] == "1":
-                new_bits_list.append(nn_b[:-1])
-                break
-
-
-    new_letters_list = []
-    for c in l:
-        new_letters_list.append(c)
-
-    test = zip(new_letters_list, new_bits_list)
-
-    ss = []
-    for c, v in test:
-        ss.append(c)
-        ss.append(v)
-
-    return ss
 
 def get_ss_two(bit_message_string):
     bm = bit_message_string
@@ -410,21 +334,39 @@ def get_ss_two(bit_message_string):
     return (ss, bm[16 + letter_bits_amount + path_bits_amount:])
 
 if __name__ == '__main__':
-    s = "Hallo, das ist ein längerer Text um zu schauen, ob alles funktioniert. Ich würde mich auf jeden Fall sehr freuen, wenn es endlich klappen würde, da das schon ganzschön lange gedauert hat so!"
-    print("s: ", s)
+    if len(sys.argv) != 3:
+        print("Usage: ./huffman.py -e test.txt")
+        print("       ./huffman.py -d test.txt.huf")
+        sys.exit(0)
 
-    bits, ss = encode(s)
+    encoded = False
+    decoded = False
+    
+    if sys.argv[1] == "-e":
+        encoded = True
+    elif sys.argv[1] == "-d":
+        decoded = True
+    else:
+        print("Usage: ./huffman.py -e test.txt")
+        print("       ./huffman.py -d test.txt.huf")
+        sys.exit(0)
 
-    tree_bin = get_tree_bin_two(ss)
+    file_name = sys.argv[2]
+    
+    if encoded:
+        s = get_s(file_name)
+        bits, ss = encode(s)
+        tree_bin = get_tree_bin_two(ss)
+        print_to_file(tree_bin + bits, file_name + '.huf')
 
-    print_to_file(tree_bin + bits, 'test.txt.huf')
+    elif decoded:
+        if file_name.endswith(".huf") == False:
+            print("Can Only Decode '.huf' Files")
+            sys.exit(0)
+        bit_message_string = read_from_file(file_name)
+        x, dec= get_ss_two(bit_message_string)
+        solution = decode(dec, x) 
 
-    bit_message_string = read_from_file('test.txt.huf')
-    x, dec= get_ss_two(bit_message_string)
-
-    solution = decode(dec, x) 
-    print("S: ", solution)
-
-    with open('solution.txt', 'w') as file:
-        file.write(solution)
+        with open(file_name[:-4], 'w') as file:
+            file.write(solution)
 
